@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <!--springboot2-->
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.6.4</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.xcw.usercenter</groupId>
+    <artifactId>User_Center_xcw</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>User_Center_xcw</name>
+    <description>User_Center_xcw</description>
+    <properties>
+        <java.version>1.8</java.version>
+    </properties>
+    <dependencies>
+        <!-- Spring Boot 的 Web 启动器，包含了Tomcat和Spring MVC -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- MyBatis Spring Boot 启动器，整合 MyBatis 和 Spring Boot -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>2.2.2</version>
+        </dependency>
+
+        <!-- MyBatis Plus 启动器，提供增强的 CRUD 操作 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <version>3.5.1</version>
+        </dependency>
+
+        <!--整合redis和springboot-->
+        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-redis -->
+        <!--Spring Data：通用的数据访问框架，定义了一组 增删改查 的接口
+        可以操作：mysql、redis、jpa例如spring-session-data-redis等,可理解为接口与实现类的关系
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>2.6.4</version>
+        </dependency>
+
+        <!-- spring-session 和 redis 的整合，使得自动将 session 存储到 redis 中-->
+        <!-- https://mvnrepository.com/artifact/org.springframework.session/spring-session-data-redis -->
+        <dependency>
+            <groupId>org.springframework.session</groupId>
+            <artifactId>spring-session-data-redis</artifactId>
+            <version>2.6.3</version>
+        </dependency>
+
+            <!--MyBatis 的分页插件 PageHelper 用mybatisplus则不需要-->
+            <!--<dependency>
+                <groupId>com.github.pagehelper</groupId>
+                <artifactId>pagehelper-spring-boot-starter</artifactId>
+                <version>1.3.0</version>
+            </dependency>-->
+        <!--引入redisson-->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson</artifactId>
+            <version>3.17.5</version>
+        </dependency>
+
+
+        <!--本项目中的stringUtils用到-->
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3,提供 Java 语言扩展和辅助功能 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+
+        <!--gson-->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.9</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.alibaba/easyexcel -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.1.1</version>
+        </dependency>
+
+        <!--引入Knife4j的官方start包,Swagger2基于Springfox2.10.5项目-->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <!--使用Swagger2-->
+            <artifactId>knife4j-spring-boot-starter</artifactId>
+            <version>2.0.9</version>
+        </dependency>
+
+        <!-- swagger -->
+       <!-- <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-spring-web</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
+        </dependency>-->
+
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- MySQL JDBC 驱动，用于连接 MySQL 数据库 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>5.1.26</scope>
+        </dependency>
+
+        <!-- Spring Boot 配置注解处理器，用于生成配置元数据 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Lombok 库，通过注解简化 Java 代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter-test</artifactId>
+            <version>3.0.3</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!--   JUnit 测试框架，用于编写和执行单元测试  -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.6.4</version>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
