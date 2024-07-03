@@ -4,7 +4,7 @@ spring:
     name: user-center
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/yupi?serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/yupi?serverTimezone=Asia/Shanghai&serverTimezone=GMT%2B8
     username: root
     password: root
   #session失效时间（分钟）
@@ -24,10 +24,16 @@ spring:
   #默认运行环境
   profiles:
     active: dev
+  jackson:
+    # 格式化全局时间字段
+    #date-format: yyyy-MM-dd HH:mm:ss
+    # 指定时间区域类型
+    time-zone: GMT+8
 server:
   port: 8080
   servlet:
     context-path: /api
+
 
 #使用 MyBatis-Plus 框架时，
 #默认情况下，MyBatis-Plus 会启用驼峰命名法到下划线命名法的自动转换。

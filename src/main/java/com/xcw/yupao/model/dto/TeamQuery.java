@@ -9,8 +9,7 @@ import java.util.List;
 /**
  *
  * dto包里面是业务封装类
- *
- * TeamQuery 队伍查询请求 封装类（去除掉Team中不重要的信息）
+ * TeamQuery 队伍查询请求 封装类（去除掉Team中不重要的或者敏感信息）
  * @author xcw
  * 继承了PageRequest里面有分页数据属性
  */
@@ -25,7 +24,7 @@ public class TeamQuery extends PageRequest {
 
     /**
      * id列表
-     * 暂时只有查看自己创建的队伍时用到
+     * 暂时只有查看自己加入的队伍时用到
      */
     private List<Long> idList;
 

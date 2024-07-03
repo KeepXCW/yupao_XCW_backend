@@ -1,16 +1,17 @@
 package com.xcw.yupao.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xcw.yupao.model.domain.Team;
 import com.xcw.yupao.model.domain.User;
 import com.xcw.yupao.model.dto.TeamQuery;
-import com.xcw.yupao.model.request.TeamAddRequest;
 import com.xcw.yupao.model.request.TeamJoinRequest;
 import com.xcw.yupao.model.request.TeamQuitRequest;
 import com.xcw.yupao.model.request.TeamUpdateRequest;
 import com.xcw.yupao.model.vo.TeamUserVO;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 
@@ -37,6 +38,8 @@ public interface TeamService extends IService<Team> {
      */
 
     List<TeamUserVO> listTeams(TeamQuery teamQuery, boolean isAdmin);
+
+
 
     /**
      * 更新队伍信息
@@ -69,4 +72,20 @@ public interface TeamService extends IService<Team> {
      * @return
      */
     boolean deleteTeam(long id, User loginUser);
+
+    /**
+     * 分页查询队伍
+     * @param teamQuery
+     * @param isAdmin
+     * @return
+     */
+    Page<TeamUserVO> listTeamsBypage(TeamQuery teamQuery, boolean isAdmin);
+
+    /**
+     * 查询私有队伍
+     * @param teamQuery
+     * @return
+     */
+    List<TeamUserVO> listPrivateTeams(TeamQuery teamQuery,HttpServletRequest request);
+
 }

@@ -11,17 +11,19 @@ import com.xcw.yupao.model.domain.Team;
 import com.xcw.yupao.model.domain.User;
 import com.xcw.yupao.model.domain.UserTeam;
 import com.xcw.yupao.model.dto.TeamQuery;
+
 import com.xcw.yupao.model.request.TeamAddRequest;
 import com.xcw.yupao.model.request.TeamJoinRequest;
 import com.xcw.yupao.model.request.TeamQuitRequest;
 import com.xcw.yupao.model.request.TeamUpdateRequest;
 import com.xcw.yupao.model.vo.TeamUserVO;
-import com.xcw.yupao.model.vo.UserVO;
+
 import com.xcw.yupao.service.TeamService;
 import com.xcw.yupao.service.UserService;
 import com.xcw.yupao.service.UserTeamService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,11 +46,8 @@ import java.util.stream.Collectors;
 @RestController
 @Api(tags = "队伍")//定义knife4j文档中这个类接口目录名字
 @RequestMapping("/team")
-/**
- * allowCredentials = "true" 是 @CrossOrigin 注解中的一个属性，
+/**allowCredentials = "true" 是 @CrossOrigin 注解中的一个属性，
  * 它的作用是允许浏览器发送和接收跨域请求时携带凭证信息（例如Cookies、HTTP认证头或TLS客户端证书）。*/
-
-
 @CrossOrigin(origins = {"http://localhost:3000"}, allowCredentials = "true")
 @Slf4j
 public class TeamController {
@@ -101,9 +100,9 @@ public class TeamController {
 //    }
 
 
-
     /**
      * 修改队伍
+     *
      * @param teamUpdateRequest
      * @param request
      * @return
@@ -156,15 +155,15 @@ public class TeamController {
         //判断当前用户是否已加入队伍
         //获取当前用户加入的队伍id集合
         *//**未用lambda表达式的写法
-         * final List<Long> teamIdList = new ArrayList<>();
-         *         for (TeamUserVO teamUserVO : teamList) {
-         *             Long id = teamUserVO.getId();
-         *             teamIdList.add(id);
-         *         }
-         *
-         * lambda表达式第一次简化：teamList.stream().map(teamUserVO -> teamUserVO.getId()).collect(Collectors.toList());
-         * 二次简化：teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
-         *//*
+     * final List<Long> teamIdList = new ArrayList<>();
+     *         for (TeamUserVO teamUserVO : teamList) {
+     *             Long id = teamUserVO.getId();
+     *             teamIdList.add(id);
+     *         }
+     *
+     * lambda表达式第一次简化：teamList.stream().map(teamUserVO -> teamUserVO.getId()).collect(Collectors.toList());
+     * 二次简化：teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
+     *//*
         final List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
         //获取当前用户加入的队伍id集合
@@ -191,8 +190,10 @@ public class TeamController {
 
     /**
      * 查询所有队伍
+     * 以及队伍加入的人数情况等信息
      * 注：team.setHasJoin(hasJoin);//便于前端根据用户是否已加入来判断显示加入还是退出按钮
-     * @param teamQuery
+     *
+     * @param teamQuery 查询条件 为null时默认查询所有队伍
      * @param request
      * @return
      */
@@ -237,7 +238,8 @@ public class TeamController {
                 team.setHasJoin(hasJoin);
             });
 
-        }catch (Exception e){}
+        } catch (Exception e) {
+        }
         //3. 查询加入队伍的人数
         QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
         userTeamJoinQueryWrapper.in("teamId", teamIdList);
@@ -247,7 +249,8 @@ public class TeamController {
 
         //把我加入的所有队伍根据队伍id各自分组
         Map<Long, List<UserTeam>> teamIdUserTeamList = userTeamList.stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
-       //todo 没看懂？
+        //todo 没看懂？
+        //尝试获取与当前 team 的 ID (team.getId()) 相关联的 UserTeam 对象列表。空则默认返回空列表
         teamList.forEach(team -> team.setHasJoinNum(teamIdUserTeamList.getOrDefault(team.getId(), new ArrayList<>()).size()));
 
 
@@ -255,25 +258,56 @@ public class TeamController {
     }
 
     /**
+     * todo 待做查询分页
      * 分页查询队伍
+     *
      * @param teamQuery
      * @return
      */
+
     @GetMapping("/list/page")
-    public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery) {
+    public BaseResponse<Page<TeamUserVO>> listTeamsByPage(TeamQuery teamQuery, HttpServletRequest request) {
+        //teamQuery不会为空，smringmvc特性
+        if (teamQuery == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        boolean isAdmin = userService.isAdmin(request);
+        Page<TeamUserVO> listTeamsBypage = teamService.listTeamsBypage(teamQuery, isAdmin);
+        if (listTeamsBypage == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        return ResultUtils.success(listTeamsBypage);
+    }
+
+
+
+   /* public BaseResponse<Page<Team>> listTeamsByPage(TeamQuery teamQuery) {
         if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         Team team = new Team();
-        //把teamQuery的属性传递给此时的team对象，因为teamService里面带的curdApi是关于Team的
-        BeanUtils.copyProperties(team, teamQuery);
-        //定义分页信息（起始页数，页面大小）
+        BeanUtils.copyProperties(teamQuery, team);
         Page<Team> page = new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize());
-        //查询条件
         QueryWrapper<Team> queryWrapper = new QueryWrapper<>(team);
-        //获取分页查询结果
         Page<Team> resultPage = teamService.page(page, queryWrapper);
         return ResultUtils.success(resultPage);
+    }*/
+
+
+    /**
+     * 查询私有队伍（管理员权限）
+     *
+     * @param teamQuery
+     * @param request
+     * @return
+     */
+    @GetMapping("/list/privateTeam")
+    public BaseResponse<List<TeamUserVO>> listPrivateTeams(TeamQuery teamQuery, HttpServletRequest request){
+        if (teamQuery == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        List<TeamUserVO> teamUserVOList = teamService.listPrivateTeams(teamQuery, request);
+        return ResultUtils.success(teamUserVOList);
     }
 
     //加入队伍
@@ -301,7 +335,7 @@ public class TeamController {
     //删除队伍
     @PostMapping("/delete")
     public BaseResponse<Boolean> deleteTeam(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
-        if (deleteRequest == null ||deleteRequest.getId() <= 0) {
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long id = deleteRequest.getId();
@@ -368,6 +402,7 @@ public class TeamController {
         User loginUser = userService.getLoginUser(request);
         QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userId", loginUser.getId());
+        // 查询用户加入的所有队伍
         List<UserTeam> userTeamsList = userTeamService.list(queryWrapper);
         // 取出不重复的队伍 id
         // teamId userId
@@ -377,17 +412,21 @@ public class TeamController {
         // result
         // 1 => 2, 3
         // 2 => 3
+        // 按队伍ID分组，得到一个Map，其中Key是队伍ID，Value是加入该队伍的用户列表
         Map<Long, List<UserTeam>> listMap = userTeamsList.stream()
                 .collect(Collectors.groupingBy(UserTeam::getTeamId));
+
+        // 提取出不重复的队伍ID
         List<Long> idList = new ArrayList<>(listMap.keySet());
+
         teamQuery.setIdList(idList);
 
         //只有管理员才能查看加密还有非公开的房间
+        // 调用服务层方法获取队伍列表，并传递一个标志表示当前用户是管理员
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, true);
 
         return ResultUtils.success(teamList);
     }
-
 
 
 }

@@ -228,7 +228,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             //使用静态导入
             throw new BusinessException(NO_AUTH);
         }
-        return userlogin;
+        //再次查询数据库是为了确保从数据库获得最新数据，而不仅仅是从session中获取
+        User user = this.userMapper.selectById(userlogin.getId());
+        return user;
     }
 
     @Override
