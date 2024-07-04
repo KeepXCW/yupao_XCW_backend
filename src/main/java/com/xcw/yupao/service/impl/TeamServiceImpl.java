@@ -495,9 +495,10 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         if (TeamStatusEnum.PRIVATE.equals(teamStatusEnum)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "禁止加入私有队伍");
         }
+        //队伍状态为加密时，必须输入密码才能加入队伍
         String password = teamJoinRequest.getPassword();
         if (TeamStatusEnum.SECRET.equals(teamStatusEnum)) {
-            if (StringUtils.isBlank(password) || password.equals(team.getPassword())) {
+            if (StringUtils.isBlank(password) || !password.equals(team.getPassword())) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码有误，加入队伍失败");
             }
         }
