@@ -10,7 +10,7 @@ import java.util.Date;
  * 
  * @TableName user
  */
-@TableName(value ="user2")
+@TableName(value ="user5")
 @Data
 public class User implements Serializable {
     /**
@@ -28,6 +28,12 @@ public class User implements Serializable {
      * 账号
      */
     private String userAccount;
+
+    /**
+     * 个人介绍
+     */
+    private String profile;
+
 
     /**
      * 用户头像
@@ -88,7 +94,7 @@ public class User implements Serializable {
     /**
      * 星球编号
      */
-    private String planetCode;
+    //private String planetCode;
 
     /***
      * 序列话id

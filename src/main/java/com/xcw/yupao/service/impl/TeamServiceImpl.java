@@ -113,6 +113,12 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码设置不正确");
             }
         }
+        //如果队伍是公开状态，设置密码报异常
+        if (TeamStatusEnum.PUBLIC.equals(statusEnum)) {
+            if (StringUtils.isNotBlank(password)) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "公开队伍不能设置密码");
+            }
+        }
         //(6).超出时间 > 当前时间
         // TODO: 2024/6/27 优化过期时间输入格式(不行把时去掉)
         //当前时间
@@ -139,7 +145,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         team.setId(null);
         //队伍队长id
         team.setUserId(userId);
-
+        team.setTeamUrl("https://tse2-mm.cn.bing.net/th/id/OIP-C.U8LdDZtWWdfwmPhxfq4DrQAAAA?w=201&h=201&c=7&r=0&o=5&dpr=1.3&pid=1.7");
         boolean result = this.save(team);
         //获取刚创建的队伍的id
         Long teamId = team.getId();
@@ -343,15 +349,14 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
         //不展示已过期的队伍, gt是 "greater than" 的缩写，即 "大于"。
         queryWrapper.and(qw -> qw.gt("expireTime", new Date()).or().isNull("expireTime"));
 
-        //多条件分页查询出队伍信息  todo 注释不准确
+        //多条件分页查询出队伍信息
         //List<Team> teamList = this.list(queryWrapper);
         Page<Team> teamListBypage = this.page(new Page<>(teamQuery.getPageNum(), teamQuery.getPageSize()), queryWrapper);
-        //获取队伍信息 todo 注释不准确
+        //获取队伍信息
         List<Team> teamList = teamListBypage.getRecords();
         //判断teamListBypage为空则抛异常
         if (CollectionUtils.isEmpty(teamList)) {
-            //返回空页面
-            // todo 写的对吗？
+            //若查询结果为空，则返回一个空的分页对象
             return new Page<>();
         }
 
@@ -418,6 +423,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             userTeamQueryWrapper.eq("teamId", teamId);
             long hasJoinNum = userTeamService.count(userTeamQueryWrapper);
             teamUserVO.setHasJoinNum((int) hasJoinNum);
+            team.setHasJoinNum((int) hasJoinNum);
             teamUserVOS.add(teamUserVO);
         }
         return teamUserVOS;

@@ -10,7 +10,7 @@ import java.util.Date;
  * 用户队伍关系（中间表）
  * @TableName user_team
  */
-@TableName(value ="user_team")
+@TableName(value ="user_team5")
 @Data
 public class UserTeam implements Serializable {
     /**
@@ -58,4 +58,5 @@ public class UserTeam implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
 }

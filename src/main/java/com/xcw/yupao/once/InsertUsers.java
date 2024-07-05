@@ -41,7 +41,7 @@ public class InsertUsers {
             user.setTags("[]");
             user.setUserStatus(0);
             user.setUserRole(0);
-            user.setPlanetCode("11111111");
+            //user.setPlanetCode("11111111");
             userMapper.insert(user);
         }
         stopWatch.stop();

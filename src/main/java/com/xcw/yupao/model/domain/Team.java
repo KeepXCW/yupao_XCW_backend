@@ -10,7 +10,7 @@ import java.util.Date;
  * 队伍
  * @TableName team
  */
-@TableName(value ="team")
+@TableName(value ="team5")
 @Data
 public class Team implements Serializable {
 
@@ -75,6 +75,16 @@ public class Team implements Serializable {
      */
     @TableLogic
     private Integer isDelete;
+
+    /**
+     * 队伍头像
+     */
+    private String teamUrl;
+
+    /**
+     * 已加入队伍人数
+     */
+    private Integer hasJoinNum;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

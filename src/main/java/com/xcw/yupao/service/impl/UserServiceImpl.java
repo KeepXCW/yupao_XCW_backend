@@ -10,6 +10,7 @@ import com.xcw.yupao.exception.BusinessException;
 import com.xcw.yupao.model.domain.User;
 import com.xcw.yupao.mapper.UserMapper;
 
+import com.xcw.yupao.model.request.UserRegisterRequest;
 import com.xcw.yupao.service.UserService;
 import com.xcw.yupao.utils.AlgorithmUtils;
 
@@ -33,7 +34,6 @@ import static com.xcw.yupao.contant.UserConstant.ADMIN_ROLE;
 import static com.xcw.yupao.contant.UserConstant.USER_LOGIN_STATE;
 
 
-
 /**
  * @author xcw
  * @description 针对表【user】的数据库操作Service实现
@@ -54,16 +54,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     private static final String SALT = "yupi";
 
 
-
     /**
      * 注册
-     * @param userAccount   账号
-     * @param userPassword  密码
-     * @param checkPassword 校验密码
-     * @param planetCode 星球编号
-     * @return
+     *
+     * @param userAccount  账号
+     * @param userPassword 密码
      */
-    @Override
+   /* @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode) {
         //1.校验
         if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword, planetCode)) {
@@ -115,7 +112,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         User user = new User();
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptPassword);
-        user.setPlanetCode(planetCode);
+        //user.setPlanetCode(planetCode);
+        user.setProfile("这个人很懒，介绍都不写。");
+        //第一次注册默认标签为空
+        user.setTags("[]");
+        //首次注册默认头像
+        user.setAvatarUrl("https://tse1-mm.cn.bing.net/th/id/OIP-C.HFDhPaQXdfpbZ21qTR0oPgAAAA?w=177&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7");
         //保存到数据库
         //关键字 this 指的是当前对象的引用，即表示当前类的一个实例对象，这里是userRegister类的实例
         boolean saveResult = this.save(user);
@@ -132,7 +134,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         return user.getId();
     }
-
+*/
     //登录
     @Override
     public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
@@ -179,12 +181,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
     /**
-     * @param orignUser
+     * @param originUser
      * @return
      */
     @Override
-    public User getSafetyUser(User orignUser) {
-        if (orignUser == null) {
+    public User getSafetyUser(User originUser) {
+        if (originUser == null) {
             return null;
         }
         //方法二：把脱敏的信息判空
@@ -193,18 +195,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //方法一：把需要的对象属性赋值给safetyUser新对象并返回
         User safetyUser = new User();
-        safetyUser.setId(orignUser.getId());
-        safetyUser.setUsername(orignUser.getUsername());
-        safetyUser.setUserAccount(orignUser.getUserAccount());
-        safetyUser.setAvatarUrl(orignUser.getAvatarUrl());
-        safetyUser.setGender(orignUser.getGender());
-        safetyUser.setPhone(orignUser.getPhone());
-        safetyUser.setEmail(orignUser.getEmail());
-        safetyUser.setPlanetCode(orignUser.getPlanetCode());
-        safetyUser.setUserRole(orignUser.getUserRole());
-        safetyUser.setUserStatus(orignUser.getUserStatus());
-        safetyUser.setCreateTime(orignUser.getCreateTime());
-        safetyUser.setTags(orignUser.getTags());
+        safetyUser.setId(originUser.getId());
+        safetyUser.setUsername(originUser.getUsername());
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setProfile(originUser.getProfile());
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setPhone(originUser.getPhone());
+        safetyUser.setEmail(originUser.getEmail());
+        //safetyUser.setPlanetCode(originUser.getPlanetCode());
+        safetyUser.setUserRole(originUser.getUserRole());
+        safetyUser.setUserStatus(originUser.getUserStatus());
+        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setTags(originUser.getTags());
         return safetyUser;
     }
 
@@ -257,7 +260,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     /**
      * 匹配用户
-     * @param num 匹配人数
+     *
+     * @param num       匹配人数
      * @param loginUser 登录用户
      * @return
      */
@@ -322,12 +326,135 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return finalUserList;
     }
 
+    /**
+     * 用户注册
+     *
+     * @param userRegisterRequest
+     * @return
+     */
+    @Override
+    public long userRegister(UserRegisterRequest userRegisterRequest) {
+        String userAccount = userRegisterRequest.getUserAccount();
+        String userPassword = userRegisterRequest.getUserPassword();
+        String checkPassword = userRegisterRequest.getCheckPassword();
+
+
+        //1.校验
+        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
+            throw new BusinessException(PARAMS_ERROR, "参数为空");
+        }
+        if (userAccount.length() < 4) {
+            throw new BusinessException(PARAMS_ERROR, "用户账号过短");
+        }
+        if (userPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(PARAMS_ERROR, "用户密码过短");
+        }
+       /* if (planetCode.length() > 5) {
+            throw new BusinessException(PARAMS_ERROR, "星球编号过长");
+        }*/
+
+        // 账户不能包含特殊字符
+        String validPattern = "[`~!@#$%^&*()+=|{}':;',\\\\[\\\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if (matcher.find()) {
+            throw new BusinessException(PARAMS_ERROR);
+        }
+        // 密码和校验密码相同
+        if (!userPassword.equals(checkPassword)) {
+            throw new BusinessException(PARAMS_ERROR);
+        }
+
+        //查询用户是否存在（账号重复性校验）
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("userAccount", userAccount);
+        //接受一个 QueryWrapper 对象作为参数，然后根据这个 QueryWrapper 构建的查询条件去数据库中统计符合条件的记录数量，并将这个数量返回。
+        long count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException(PARAMS_ERROR, "账号重复");
+        }
+
+        //星球编号不能重复
+        /*queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("planetCode", planetCode);*/
+        //接受一个 QueryWrapper 对象作为参数，然后根据这个 QueryWrapper 构建的查询条件去数据库中统计符合条件的记录数量，并将这个数量返回。
+        count = userMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            throw new BusinessException(PARAMS_ERROR, "编号重复");
+        }
+
+
+        //2.加密
+        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+        //3.插入数据
+        User user = new User();
+        user.setUserAccount(userAccount);
+        user.setUserPassword(encryptPassword);
+        //user.setPlanetCode(planetCode);
+        //默认用户名为————用户：账号
+        user.setUsername("用户" + user.getUserAccount());
+//        //默认是男
+//        user.setGender(0);
+        user.setProfile("这个人很懒，介绍都不写。");
+        //第一次注册默认标签为空
+        user.setTags("[]");
+        //首次注册默认头像
+        user.setAvatarUrl("https://tse1-mm.cn.bing.net/th/id/OIP-C.HFDhPaQXdfpbZ21qTR0oPgAAAA?w=177&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7");
+        //保存到数据库
+        //关键字 this 指的是当前对象的引用，即表示当前类的一个实例对象，这里是userRegister类的实例
+        boolean saveResult = this.save(user);
+
+        if (!saveResult) {
+            throw new BusinessException(PARAMS_ERROR, "保存用户数据失败");
+        }
+        //另一种mapper层的方法
+//        int n = userMapper.insert(user);
+//        if (n <=0) {
+//
+//            return -1;
+//        }
+
+        return user.getId();
+
+    }
+
+    /**
+     * 修改用户标签
+     *
+     * @param userId
+     * @param loginUser
+     * @param tags
+     * @return
+     */
+    @Override
+    public int updateTags(Long userId, User loginUser, List<String> tags) {
+        //更新用户信息，先获取到用户的 id，判断 id < 0 就没有此用户
+        if (userId < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //将拿到的标签列表转换成 Json格式
+        Gson gson = new Gson();
+        String StrToJson = gson.toJson(tags);
+        //拿到要修改的用户id，然后修改
+        //当前用户态的用户（已登录）不是管理员，并且修改的用户信息也不是已登录用户的（修改的不是自己的），就抛异常
+        /*if (!isAdmin(loginUser) && !Objects.equals(userId, loginUser.getId())) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }*/
+        if (!isAdmin(loginUser) && !loginUser.getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        User user = new User();
+        user.setId(userId);
+        user.setTags(StrToJson);
+        //触发更新
+        return this.baseMapper.updateById(user);
+    }
+
 
     //用户注销
     @Override
     public int userLogout(HttpServletRequest request) {
         //判断是否登录,false代表如果当前请求没有关联的会话，则返回 null，不会创建新地会话。
-        if (request.getSession(false)==null){
+        if (request.getSession(false) == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         //移除登录态
@@ -455,9 +582,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         return users01;
     }*/
+
     /**
      * 修改用户信息
-     * 注意id是数据库生的,固定死的
      *
      * @param user      最新的用户信息（前端传过来要修改的用户信息,）
      * @param loginUser 目前登录的用户
@@ -467,19 +594,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     public int updateUser(User user, User loginUser) {
 
         if (loginUser == null) {
-            throw new BusinessException(PARAMS_ERROR);
+            throw new BusinessException(PARAMS_ERROR,"用户未登录");
         }
 
         //获取要修改的用户id，并判断输入的id是否合理
         long userId = user.getId();
-        if (userId < 0) {
+        if (userId <= 0) {
             throw new BusinessException(PARAMS_ERROR);
         }
 
         // 如果是管理员，允许更新任意用户
         // 如果不是管理员，只允许更新当前（自己的）信息
         if (!isAdmin(loginUser) && userId != loginUser.getId()) {
-            throw new BusinessException(NO_AUTH);
+            throw new BusinessException(NO_AUTH,"无权限");
         }
 
         //根据id 查询要修改的用户的是否存在
@@ -488,25 +615,63 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             throw new BusinessException(NULL_ERROR);
         }
 
+        // 不打算更新的字段，默认不变
+        if (StringUtils.isEmpty(user.getUsername())) {
+            user.setUsername(oldUser.getUsername());
+        }
+        if (StringUtils.isEmpty(user.getProfile())) {
+            user.setProfile(oldUser.getProfile());
+        }
+        if (StringUtils.isEmpty(user.getAvatarUrl())) {
+            user.setAvatarUrl(oldUser.getAvatarUrl());
+        }
+
+//        if (StringUtils.isEmpty(user.getTags())){
+//            user.setTags(oldUser.getTags());
+//        }
+        if (StringUtils.isEmpty(user.getPhone())) {
+            user.setPhone(oldUser.getPhone());
+        }
+        if (StringUtils.isEmpty(user.getEmail())) {
+            user.setEmail(oldUser.getEmail());
+        }
+
+
+        //从user对象获取前端由userUpdateRequest请求包装对象传递给user的密码
+        String userPassword = user.getUserPassword();
+        //注意这里的StringUtils.isNotBlank校验不为null和不为空的字符串(包括空格),前传传递的空json会被反实例化为null，所以不能只判断！isEmpty()
+        if (StringUtils.isNotBlank(userPassword)) {
+            //修改密码时对密码的格式进行校验
+            if (userPassword.length() < 8) {
+                throw new BusinessException(PARAMS_ERROR, "用户密码过短");
+            }
+            // 加密新密码
+            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
+            // 修改过的密码也加密写入数据库
+            user.setUserPassword(encryptPassword);
+        } else {
+            // 如果用户没有修改密码，则保持原密码不变
+            user.setUserPassword(oldUser.getUserPassword());
+        }
         //跟新用户信息并返回更新操作影响的行数
         return userMapper.updateById(user);
     }
 
 
     /**
-     *   根据标签搜索用户。
-     * @param tagNameList  用户要搜索的标签
+     * 根据标签搜索用户。
+     *
+     * @param tagNameList 用户要搜索的标签
      * @return
      */
     @Override
-    public List<User> searchUserByTags(List<String> tagNameList){
-        if (CollectionUtils.isEmpty(tagNameList)){
+    public List<User> searchUserByTags(List<String> tagNameList) {
+        if (CollectionUtils.isEmpty(tagNameList)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         return sqlSearch(tagNameList);   //先 sql query time = 579ms 后 memory query time = 5606
         //return memorySearch(tagNameList);    // 先 memory query time = 5938 后 sql query time = 5956 （清过缓存）
     }
-
 
 
     /**
@@ -541,10 +706,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 第二种方法
      * 查询，内存运行筛选
+     *
      * @param tagNameList
      * @return
      */
-    public List<User> memorySearch(List<String> tagNameList){
+    public List<User> memorySearch(List<String> tagNameList) {
 
         //1.先查询所有用户
         QueryWrapper queryWrapper = new QueryWrapper<>();
@@ -554,19 +720,20 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //2.判断内存中是否包含要求的标签
         userList.stream().filter(user -> {
             String tagstr = user.getTags();
-            if (StringUtils.isBlank(tagstr)){
+            if (StringUtils.isBlank(tagstr)) {
                 return false;
             }
-            Set<String> tempTagNameSet =  gson.fromJson(tagstr,new TypeToken<Set<String>>(){}.getType());
-            for (String tagName : tagNameList){
-                if (!tempTagNameSet.contains(tagName)){
+            Set<String> tempTagNameSet = gson.fromJson(tagstr, new TypeToken<Set<String>>() {
+            }.getType());
+            for (String tagName : tagNameList) {
+                if (!tempTagNameSet.contains(tagName)) {
                     return false;
                 }
             }
             return true;
         }).map(this::getSafetyUser).collect(Collectors.toList());
         //log.info("memory query time = " + (System.currentTimeMillis() - starTime));
-        return  userList;
+        return userList;
     }
 
 

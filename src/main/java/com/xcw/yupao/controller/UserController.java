@@ -11,17 +11,22 @@ import com.xcw.yupao.exception.BusinessException;
 import com.xcw.yupao.model.domain.User;
 import com.xcw.yupao.model.request.UserLoginRequest;
 import com.xcw.yupao.model.request.UserRegisterRequest;
+import com.xcw.yupao.model.request.UserUpdateRequest;
+import com.xcw.yupao.model.request.UserUpdateTagsRequest;
 import com.xcw.yupao.model.vo.UserVO;
 import com.xcw.yupao.service.UserService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -55,7 +60,7 @@ public class UserController {
     private RedisTemplate<String, Page<User>> redisTemplate;
 
     //注册
-    @PostMapping("/register")
+    /*@PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
 
         //@RequestBody把前端的json参数和这里的参数关联
@@ -77,7 +82,38 @@ public class UserController {
         //return new BaseResponse<>(0, result, "ok");
 
         return ResultUtils.success(result);
+    }*/
+
+    /**
+     * 注册
+     * @param userRegisterRequest
+     * @return
+     */
+    @PostMapping("/register")
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+
+        //@RequestBody把前端的json参数和这里的参数关联
+
+        if (userRegisterRequest == null) {
+            //return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(PARAMS_ERROR);
+        }
+
+        String userAccount = userRegisterRequest.getUserAccount();
+        String userPassword = userRegisterRequest.getUserPassword();
+        String checkPassword = userRegisterRequest.getCheckPassword();
+        //String planetCode = userRegisterRequest.getPlanetCode();
+        //Apache Commons Lang 库中的一个方法，它用于检查传入的所有字符串参数是否全部为空或者空白,返回布尔值
+        if (StringUtils.isAllBlank(userAccount, userPassword, checkPassword)) {
+            return null;
+        }
+
+        long result = userService.userRegister(userRegisterRequest);
+        //return new BaseResponse<>(0, result, "ok");
+
+        return ResultUtils.success(result);
     }
+
 
     //登录
     @PostMapping("/login")
@@ -231,14 +267,8 @@ public class UserController {
         return userService.selectAll();
     }
 
-    /**
-     * 更新用户信息
-     *
-     * @param user    前端传过来的要更新的json用户信息
-     * @param request 用来获取当前登录的用户信息
-     * @return int 受影响的行数
-     */
-    @PostMapping("/update")
+
+    /*@PostMapping("/update")
     public BaseResponse<Integer> updateUser(@RequestBody User user, HttpServletRequest request) {
         //校验参数是否为空
         if (user == null) {
@@ -250,7 +280,80 @@ public class UserController {
         int result = userService.updateUser(user, loginUser);
 
         return ResultUtils.success(result);
+    }*/
+
+    /**
+     * 更新用户信息
+     *
+     * @param userUpdateRequest    前端传过来的要更新的json用户信息
+     * @param request 用来获取当前登录的用户信息
+     * @return int 受影响的行数
+     */
+    @PostMapping("/update")
+    public BaseResponse<Integer> updateUser(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest request) {
+        //校验参数是否为空
+        if (userUpdateRequest == null) {
+            throw new BusinessException(PARAMS_ERROR, "查询用户输入为空");
+        }
+        //把userUpdateRequest中的数据赋值给user
+        User user = new User();
+        BeanUtils.copyProperties(userUpdateRequest, user);
+        //获取当前用户的登录信息
+        User loginUser = userService.getLoginUser(request);
+        //
+        int result = userService.updateUser(user, loginUser);
+
+        return ResultUtils.success(result);
     }
+
+    /**
+     * todo 修改用户头像
+     * 修改用户头像
+     * @param user
+     * @return
+     */
+    /*@PostMapping("/updateImg")
+    public BaseResponse<Integer> updateImg(@RequestParam(value = "file") MultipartFile file, User user, HttpServletRequest request){
+        //校验参数是否为空
+        if (user == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //校验权限（需要拿到当前用户的用户登录态）
+        User loginUser = userService.getCurrentUserLogin(request);
+        ServletContext servletContext = request.getServletContext();
+        //触发更新
+        int result = userService.updateImg(user, loginUser, file);
+        return ResultUtils.success(result);
+    }*/
+
+    /**todo 修改用户标签
+     * 修改用户标签
+     *
+     * @param userUpdateTagsRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/updateTags")
+    public BaseResponse<Integer> updateTags(@RequestBody UserUpdateTagsRequest userUpdateTagsRequest, HttpServletRequest request){
+        //校验参数是否为空
+        if (userUpdateTagsRequest == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        //修改者的id
+        Long userId = userUpdateTagsRequest.getId();
+        //修改者的标签
+        List<String> tags = userUpdateTagsRequest.getTags();
+        //校验权限（需要拿到当前用户的用户登录态）
+        User loginUser = userService.getLoginUser(request);
+        //如果用户未登录，则返回错误信息
+        if (loginUser == null){
+            throw new BusinessException(ErrorCode.NO_AUTH);
+        }
+        //触发更新
+        int result = userService.updateTags(userId, loginUser, tags);
+        return ResultUtils.success(result);
+    }
+
     /**
      * 获取最匹配的用户
      *

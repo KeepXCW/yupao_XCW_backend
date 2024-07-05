@@ -3,6 +3,7 @@ package com.xcw.yupao.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xcw.yupao.model.domain.User;
+import com.xcw.yupao.model.request.UserRegisterRequest;
 import com.xcw.yupao.model.vo.UserVO;
 
 
@@ -25,7 +26,7 @@ public interface UserService extends IService<User> {
      * @param planetCode 星球编号
      * @return 新用户id
      */
-     long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
+     //long userRegister(String userAccount, String userPassword, String checkPassword, String planetCode);
 
     /**
      * 登录
@@ -90,4 +91,20 @@ public interface UserService extends IService<User> {
      * @param loginUser
      */
     List<User> matchUsers(long num, User loginUser);
+
+    /**
+     * 用户注册
+     * @param userRegisterRequest
+     * @return
+     */
+    long userRegister(UserRegisterRequest userRegisterRequest);
+
+    /**
+     * 修改用户的标签
+     * @param userId
+     * @param loginUser
+     * @param tags
+     * @return
+     */
+    int updateTags(Long userId, User loginUser, List<String> tags);
 }

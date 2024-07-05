@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
  * 其中所有的方法都映射为HTTP请求的处理方法。
  *
  * @author xcw
+ * @author xcw
  */
 @RestController
 @Api(tags = "队伍")//定义knife4j文档中这个类接口目录名字
@@ -273,6 +274,34 @@ public class TeamController {
         }
         boolean isAdmin = userService.isAdmin(request);
         Page<TeamUserVO> listTeamsBypage = teamService.listTeamsBypage(teamQuery, isAdmin);
+
+        // 改动：获取分页查询到的队伍ID列表
+        final List<Long> teamIdList = listTeamsBypage.getRecords().stream().map(TeamUserVO::getId).collect(Collectors.toList());
+        // 1. 查询每个队伍已加入的成员信息
+        QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
+        try {
+            User loginUser = userService.getLoginUser(request);
+            userTeamQueryWrapper.eq("userId", loginUser.getId());
+            userTeamQueryWrapper.in("teamId", teamIdList);
+            List<UserTeam> userTeamList = userTeamService.list(userTeamQueryWrapper);
+            // 已加入的队伍 id 集合
+            Set<Long> hasJoinTeamIdSet = userTeamList.stream().map(UserTeam::getTeamId).collect(Collectors.toSet());
+            listTeamsBypage.getRecords().forEach(team -> {
+                boolean hasJoin = hasJoinTeamIdSet.contains(team.getId());
+                team.setHasJoin(hasJoin);
+            });
+        } catch (Exception e) {
+            // 异常处理
+        }
+
+        // 2. 查询每个队伍的成员人数
+        QueryWrapper<UserTeam> userTeamJoinQueryWrapper = new QueryWrapper<>();
+        userTeamJoinQueryWrapper.in("teamId", teamIdList);
+        List<UserTeam> userTeamList = userTeamService.list(userTeamJoinQueryWrapper);
+        // 队伍 id => 加入这个队伍的用户列表
+        Map<Long, List<UserTeam>> teamIdUserTeamList = userTeamList.stream().collect(Collectors.groupingBy(UserTeam::getTeamId));
+        listTeamsBypage.getRecords().forEach(team -> team.setHasJoinNum(teamIdUserTeamList.getOrDefault(team.getId(), new ArrayList<>()).size()));
+
         if (listTeamsBypage == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -376,8 +405,11 @@ public class TeamController {
      * @return 备注：已优化
      */
     @GetMapping("/list/my/create")
-    public BaseResponse<List<TeamUserVO>> listMyTeams(HttpServletRequest request) {
-        TeamQuery teamQuery = new TeamQuery();
+    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery,HttpServletRequest request) {
+        if (teamQuery == null){
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
         //获取当前用户的登录信息
         User loginUser = userService.getLoginUser(request);
         teamQuery.setUserId(loginUser.getId());
