@@ -1,5 +1,6 @@
 package com.xcw.yupao.model.vo;
 
+import com.xcw.yupao.model.domain.User;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -61,7 +62,12 @@ public class TeamUserVO implements Serializable {
     /**
      * 入队用户列表
      */
-    List<UserVO> userlist;
+    private List<UserVO> userlist;
+
+    /**
+     * 加入队伍的用户信息
+     */
+    private List<User> joinUsers;
 
     /**
      * 创建人用户信息

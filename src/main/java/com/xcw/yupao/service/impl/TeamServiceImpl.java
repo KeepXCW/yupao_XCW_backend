@@ -173,7 +173,7 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
 
 
     /**
-     * 查询队伍及关联查询加入的成员信息
+     * 查询队伍及关联查询创建人的信息
      *
      * @param teamQuery 脱敏队伍信息实体类
      * @return
@@ -423,7 +423,6 @@ public class TeamServiceImpl extends ServiceImpl<TeamMapper, Team>
             userTeamQueryWrapper.eq("teamId", teamId);
             long hasJoinNum = userTeamService.count(userTeamQueryWrapper);
             teamUserVO.setHasJoinNum((int) hasJoinNum);
-            team.setHasJoinNum((int) hasJoinNum);
             teamUserVOS.add(teamUserVO);
         }
         return teamUserVOS;

@@ -18,6 +18,7 @@ import com.xcw.yupao.model.request.TeamQuitRequest;
 import com.xcw.yupao.model.request.TeamUpdateRequest;
 import com.xcw.yupao.model.vo.TeamUserVO;
 
+import com.xcw.yupao.model.vo.UserVO;
 import com.xcw.yupao.service.TeamService;
 import com.xcw.yupao.service.UserService;
 import com.xcw.yupao.service.UserTeamService;
@@ -121,7 +122,7 @@ public class TeamController {
         return ResultUtils.success(true);
     }
 
-    //根据id查询队伍
+    /*//根据id查询队伍
     @GetMapping("/get")
     public BaseResponse<Team> getTeamById(@RequestParam long id) {
         if (id <= 0) {
@@ -132,6 +133,34 @@ public class TeamController {
             throw new BusinessException(ErrorCode.NULL_ERROR);
         }
         return ResultUtils.success(team);
+    }*/
+
+    //根据id查询队伍及已加入的用户信息
+    @GetMapping("/get")
+    public BaseResponse<List<User>> getTeamById(@RequestParam long id) {
+        if (id <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        Team team = teamService.getById(id);
+        if (team == null) {
+            throw new BusinessException(ErrorCode.NULL_ERROR);
+        }
+
+        ArrayList<User> userList = new ArrayList<>();
+        //在UserTeam表中根据队伍id关联查询已加入用户的信息
+        QueryWrapper<UserTeam> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("teamId", id);
+        List<UserTeam> userTeamList = userTeamService.list(queryWrapper);
+        for (UserTeam userteam : userTeamList) {
+            //得到加入用户的id
+            Long userId = userteam.getUserId();
+            //根据用户id查询出用户信息
+            User user = userService.getById(userId);
+            User safetyUser = userService.getSafetyUser(user);
+            userList.add(safetyUser);
+        }
+
+        return ResultUtils.success(userList);
     }
 
     //查询队伍
@@ -205,7 +234,7 @@ public class TeamController {
         }
         //判断当前用户是否为管理员
         boolean isAdmin = userService.isAdmin(request);
-        //1.查询所有队伍，只有管理员才能查看非公开的队伍
+        //1.查询所有队伍及创建人信息，只有管理员才能查看非公开的队伍
         List<TeamUserVO> teamList = teamService.listTeams(teamQuery, isAdmin);
 
         //返回前端——>用户是否已加入队伍的标识team.setHasJoin(hasJoin);
@@ -220,7 +249,7 @@ public class TeamController {
          * lambda表达式第一次简化：teamList.stream().map(teamUserVO -> teamUserVO.getId()).collect(Collectors.toList());
          * 二次简化：teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
          */
-        //2.获取当前用户加入的队伍id的集合
+        //2.获取当前队伍已加入用户的id的集合
         final List<Long> teamIdList = teamList.stream().map(TeamUserVO::getId).collect(Collectors.toList());
         QueryWrapper<UserTeam> userTeamQueryWrapper = new QueryWrapper<>();
         //获取当前用户加入的队伍id集合
@@ -289,6 +318,7 @@ public class TeamController {
             listTeamsBypage.getRecords().forEach(team -> {
                 boolean hasJoin = hasJoinTeamIdSet.contains(team.getId());
                 team.setHasJoin(hasJoin);
+                //team.setHasJoinNum((int) hasJoinNum);
             });
         } catch (Exception e) {
             // 异常处理
@@ -324,15 +354,15 @@ public class TeamController {
 
 
     /**
-     * 查询私有队伍（管理员权限）
+     * 查询私有队伍（管理员或者队伍创建本人权限）
      *
      * @param teamQuery
      * @param request
      * @return
      */
     @GetMapping("/list/privateTeam")
-    public BaseResponse<List<TeamUserVO>> listPrivateTeams(TeamQuery teamQuery, HttpServletRequest request){
-        if (teamQuery == null){
+    public BaseResponse<List<TeamUserVO>> listPrivateTeams(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         List<TeamUserVO> teamUserVOList = teamService.listPrivateTeams(teamQuery, request);
@@ -405,8 +435,8 @@ public class TeamController {
      * @return 备注：已优化
      */
     @GetMapping("/list/my/create")
-    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery,HttpServletRequest request) {
-        if (teamQuery == null){
+    public BaseResponse<List<TeamUserVO>> listMyCreateTeams(TeamQuery teamQuery, HttpServletRequest request) {
+        if (teamQuery == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
 
